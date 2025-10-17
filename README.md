@@ -1,8 +1,8 @@
 # ProxyBuild - Command Proxy Tool
 
-[![Tests](https://github.com/YOUR_USERNAME/ProxyBuild/workflows/Tests/badge.svg)](https://github.com/YOUR_USERNAME/ProxyBuild/actions)
-[![codecov](https://codecov.io/gh/YOUR_USERNAME/ProxyBuild/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/ProxyBuild)
-[![Go Report Card](https://goreportcard.com/badge/github.com/YOUR_USERNAME/ProxyBuild)](https://goreportcard.com/report/github.com/YOUR_USERNAME/ProxyBuild)
+[![Tests](https://github.com/KilianSen/ProxyBuild/workflows/Tests/badge.svg)](https://github.com/YOUR_USERNAME/ProxyBuild/actions)
+[![codecov](https://codecov.io/gh/KilianSen/ProxyBuild/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/ProxyBuild)
+[![Go Report Card](https://goreportcard.com/badge/github.com/KilianSen/ProxyBuild)](https://goreportcard.com/report/github.com/YOUR_USERNAME/ProxyBuild)
 
 Ein flexibles Tool, das als Proxy für beliebige Commands fungiert und konfigurierbare Hooks vor/nach Sub-Commands ausführt.
 
