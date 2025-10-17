@@ -1,0 +1,63 @@
+{
+  "base_command": "docker-compose",
+  "hooks": {
+    "up": [
+      {
+        "command": "echo",
+        "args": ["🚀 Starting services..."],
+        "when": "before"
+      },
+      {
+        "command": "echo",
+        "args": ["✅ Services started successfully!"],
+        "when": "after",
+        "conditions": {
+          "on_error": false
+        }
+      },
+      {
+        "command": "echo",
+        "args": ["❌ Failed to start services!"],
+        "when": "after",
+        "conditions": {
+          "on_error": true
+        }
+      },
+      {
+        "command": "echo",
+        "args": ["Running in detached mode with -d flag"],
+        "when": "after",
+        "conditions": {
+          "args_contain": ["-d"]
+        }
+      }
+    ],
+    "down": [
+      {
+        "command": "echo",
+        "args": ["Stopping services..."],
+        "when": "before"
+      },
+      {
+        "command": "docker",
+        "args": ["system", "prune", "-f"],
+        "when": "after",
+        "conditions": {
+          "on_error": false,
+          "args_contain": ["--volumes"]
+        }
+      }
+    ],
+    "logs": [
+      {
+        "command": "echo",
+        "args": ["Following logs in real-time..."],
+        "when": "before",
+        "conditions": {
+          "args_match": ["-f", "--follow"]
+        }
+      }
+    ]
+  }
+}
+

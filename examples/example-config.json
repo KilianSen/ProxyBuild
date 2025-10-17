@@ -1,0 +1,25 @@
+{
+  "base_command": "docker-compose",
+  "hooks": {
+    "up": [
+      {
+        "command": "echo",
+        "args": ["Starting services..."],
+        "when": "before"
+      },
+      {
+        "command": "echo",
+        "args": ["Services started!"],
+        "when": "after"
+      }
+    ],
+    "down": [
+      {
+        "command": "echo",
+        "args": ["Cleaning up..."],
+        "when": "after"
+      }
+    ]
+  }
+}
+

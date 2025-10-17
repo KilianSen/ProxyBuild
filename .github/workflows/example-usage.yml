@@ -1,0 +1,52 @@
+  build-and-release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build proxy
+        id: build
+        uses: YOUR_USERNAME/ProxyBuild@v1
+        with:
+          config-file: 'proxy-config.json'
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.build.outputs.executable-path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cross-compile-all-platforms:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            name: linux-amd64
+          - os: linux
+            arch: arm64
+            name: linux-arm64
+          - os: darwin
+            arch: amd64
+            name: macos-intel
+          - os: darwin
+            arch: arm64
+            name: macos-silicon
+          - os: windows
+            arch: amd64
+            name: windows-amd64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build for ${{ matrix.name }}
+        uses: YOUR_USERNAME/ProxyBuild@v1
+        with:
+          config-file: 'proxy-config.json'
+          target-os: ${{ matrix.os }}
+          target-arch: ${{ matrix.arch }}
+          output-name: 'my-proxy-${{ matrix.name }}'
+

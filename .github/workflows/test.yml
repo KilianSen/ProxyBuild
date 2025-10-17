@@ -1,0 +1,153 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.21', '1.22', '1.23']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: |
+        cd proxy && go mod download
+        cd ../tests && go mod download
+
+    - name: Run proxy tests
+      run: cd tests && go test -v ./...
+
+    - name: Run tests with race detector
+      run: cd tests && go test -race -v ./...
+
+    - name: Run tests with coverage
+      run: cd tests && go test -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./tests/coverage.out
+        flags: unittests
+        name: codecov-${{ matrix.os }}-go${{ matrix.go-version }}
+
+  build:
+    name: Build Binary
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Build
+      run: go build -v -o proxybuild${{ matrix.os == 'windows-latest' && '.exe' || '' }} main.go
+
+    - name: Test build
+      if: matrix.os != 'windows-latest'
+      run: ./proxybuild || true
+
+    - name: Test build (Windows)
+      if: matrix.os == 'windows-latest'
+      run: .\proxybuild.exe
+      shell: pwsh
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        version: latest
+        args: --timeout=5m
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Build binary
+      run: go build -o proxybuild main.go
+
+    - name: Create test config
+      run: |
+        cat > test-config.json << 'EOF'
+        {
+          "base_command": "echo",
+          "hooks": {
+            "test": [
+              {
+                "command": "echo",
+                "args": ["Before hook executed"],
+                "when": "before"
+              },
+              {
+                "command": "echo",
+                "args": ["After hook executed"],
+                "when": "after"
+              }
+            ]
+          }
+        }
+        EOF
+
+    - name: Test proxy mode
+      run: ./proxybuild -config test-config.json test arg1 arg2
+
+    - name: Test build mode
+      run: ./proxybuild -build test-config.json
+
+    - name: Verify built proxy
+      run: |
+        ./echo-proxy test arg1 arg2
+        rm -f echo-proxy
+
