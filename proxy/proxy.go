@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -26,6 +27,7 @@ type Conditions struct {
 	OnError     *bool    `json:"on_error"`     // Nur bei Fehler (true) oder nur ohne Fehler (false)
 	ArgsContain []string `json:"args_contain"` // Hook nur ausführen, wenn diese Strings in den Args enthalten sind
 	ArgsMatch   []string `json:"args_match"`   // Hook nur ausführen, wenn Args exakt übereinstimmen
+	OsMatch     []string `json:"os_match"`     // Hook nur ausführen, wenn OS partitive übereinstimmt
 }
 
 // Run führt den Proxy mit der gegebenen Konfiguration aus
@@ -55,6 +57,7 @@ func Run(config *Config, args []string) error {
 
 	baseCommandErr := cmd.Run()
 	hadError := baseCommandErr != nil
+	osString := runtime.GOOS
 
 	if hadError {
 		// Fehler des Basis-Commands, aber trotzdem "after" Hooks ausführen
@@ -67,7 +70,7 @@ func Run(config *Config, args []string) error {
 	// Führe "after" Hooks aus
 	if hooks, exists := config.Hooks[subCommand]; exists {
 		for _, hook := range hooks {
-			if hook.When == "after" && ShouldExecuteHook(hook, args, hadError) {
+			if hook.When == "after" && ShouldExecuteHook(hook, args, hadError, osString) {
 				if err := executeHook(hook); err != nil {
 					return fmt.Errorf("Fehler beim Ausführen des after-Hooks: %w", err)
 				}
@@ -79,7 +82,20 @@ func Run(config *Config, args []string) error {
 }
 
 // ShouldExecuteHook überprüft, ob ein Hook ausgeführt werden soll basierend auf den Bedingungen
-func ShouldExecuteHook(hook Hook, args []string, hadError bool) bool {
+func ShouldExecuteHook(hook Hook, args []string, hadError bool, os string) bool {
+	// Check if one of the supplies OS's matches
+	anyOsMatch := false
+	if hook.Conditions.OsMatch != nil {
+		for _, match := range hook.Conditions.OsMatch {
+			if match == os {
+				anyOsMatch = true
+			}
+		}
+		if !anyOsMatch {
+			return false
+		}
+	}
+
 	// Überprüfe OnError-Bedingung
 	if hook.Conditions.OnError != nil {
 		if *hook.Conditions.OnError != hadError {
