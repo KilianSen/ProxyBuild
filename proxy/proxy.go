@@ -12,6 +12,7 @@ import (
 type Config struct {
 	BaseCommand string            `json:"base_command"`
 	Hooks       map[string][]Hook `json:"hooks"`
+	EnvVars     map[string]string `json:"env_vars"`
 }
 
 // Hook definiert einen Hook, der bei einem bestimmten Sub-Command ausgeführt wird
@@ -51,12 +52,25 @@ func Run(config *Config, args []string) error {
 		}
 	}
 
+	// Config EnvVars
+	configEnv := config.EnvVars
+	for _, kV := range os.Environ() {
+		key := strings.Split(kV, "=")[0]
+		value := strings.Split(kV, "=")[1]
+		configEnv[key] = value
+	}
+
+	var overloaded []string
+	for key, value := range configEnv {
+		overloaded = append(overloaded, fmt.Sprintf("%s=%s", key, value))
+	}
+
 	// Führe den Basis-Command aus
 	cmd := exec.Command(config.BaseCommand, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
-
+	cmd.Env = overloaded
 	baseCommandErr := cmd.Run()
 	hadError := baseCommandErr != nil
 

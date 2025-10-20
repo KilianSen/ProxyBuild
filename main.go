@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"ProxyBuild/proxy"
 )
@@ -131,6 +133,24 @@ func buildExecutable(opts BuildOptions) error {
 	configData, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
+	}
+
+	// Resolve applicable build env vars to config, before embedding config in build step
+	envVars := os.Environ()
+	if len(envVars) >= 1 {
+		for _, envVar := range envVars {
+			key := strings.Split(envVar, "=")[0]
+			val := strings.Split(envVar, "=")[1]
+
+			// Windows Env Syntax: %key%
+			windowsSyntax := fmt.Sprintf("%%%s%%", key)
+
+			// Unix Env Syntax: ${key}
+			unixSyntax := fmt.Sprintf("${%s}", key)
+
+			configData = bytes.Replace(configData, []byte(unixSyntax), []byte(val), -1)
+			configData = bytes.Replace(configData, []byte(windowsSyntax), []byte(val), -1)
+		}
 	}
 
 	if err := os.WriteFile(filepath.Join(buildDir, "config.json"), configData, 0644); err != nil {
