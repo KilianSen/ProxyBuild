@@ -38,10 +38,12 @@ func Run(config *Config, args []string) error {
 		subCommand = args[0]
 	}
 
+	osString := runtime.GOOS
+
 	// Führe "before" Hooks aus
 	if hooks, exists := config.Hooks[subCommand]; exists {
 		for _, hook := range hooks {
-			if hook.When == "before" && ShouldExecuteHook(hook, args, false) {
+			if hook.When == "before" && ShouldExecuteHook(hook, args, false, osString) {
 				if err := executeHook(hook); err != nil {
 					return fmt.Errorf("Fehler beim Ausführen des before-Hooks: %w", err)
 				}
@@ -57,7 +59,6 @@ func Run(config *Config, args []string) error {
 
 	baseCommandErr := cmd.Run()
 	hadError := baseCommandErr != nil
-	osString := runtime.GOOS
 
 	if hadError {
 		// Fehler des Basis-Commands, aber trotzdem "after" Hooks ausführen
