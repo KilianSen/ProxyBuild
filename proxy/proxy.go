@@ -11,14 +11,23 @@ import (
 // Config definiert die Konfiguration für Command-Hooks
 type Config struct {
 	BaseCommand string            `json:"base_command"`
+	Executor    Executor          `json:"executor"`
 	Hooks       map[string][]Hook `json:"hooks"`
 	EnvVars     map[string]string `json:"env_vars"`
 }
+
+type Executor string
+
+const (
+	ExecutorShell  Executor = "shell"
+	ExecutorDirect Executor = "direct"
+)
 
 // Hook definiert einen Hook, der bei einem bestimmten Sub-Command ausgeführt wird
 type Hook struct {
 	Command    string     `json:"command"`
 	Args       []string   `json:"args"`
+	Executor   Executor   `json:"executor"`
 	When       string     `json:"when"`       // "before" oder "after"
 	Conditions Conditions `json:"conditions"` // Optionale Bedingungen
 }
@@ -70,18 +79,12 @@ func Run(config *Config, args []string) error {
 		overloaded = append(overloaded, fmt.Sprintf("%s=%s", key, value))
 	}
 
-	// Führe den Basis-Command aus
-	cmd := exec.Command(config.BaseCommand, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	cmd.Env = overloaded
-	baseCommandErr := cmd.Run()
-	hadError := baseCommandErr != nil
+	// New executor
+	err := execute(config.BaseCommand, args, config.Executor, overloaded)
 
-	if hadError {
+	if err != nil {
 		// Fehler des Basis-Commands, aber trotzdem "after" Hooks ausführen
-		_, err := fmt.Fprintf(os.Stderr, "Basis-Command fehlgeschlagen: %v\n", baseCommandErr)
+		_, err := fmt.Fprintf(os.Stderr, "Basis-Command fehlgeschlagen: %v\n", err)
 		if err != nil {
 			return err
 		}
@@ -90,9 +93,9 @@ func Run(config *Config, args []string) error {
 	// Führe "after" Hooks aus
 	if hooks, exists := config.Hooks[subCommand]; exists {
 		for _, hook := range hooks {
-			if hook.When == "after" && ShouldExecuteHook(hook, args, hadError, osString) {
+			if hook.When == "after" && ShouldExecuteHook(hook, args, err != nil, osString) {
 				if err := executeHook(hook); err != nil {
-					return fmt.Errorf("Fehler beim Ausführen des after-Hooks: %w", err)
+					return fmt.Errorf("fehler beim Ausführen des after-Hooks: %w", err)
 				}
 			}
 		}
@@ -159,8 +162,35 @@ func ShouldExecuteHook(hook Hook, args []string, hadError bool, os string) bool 
 }
 
 func executeHook(hook Hook) error {
-	fmt.Printf("→ Hook: %s %s\n", hook.Command, strings.Join(hook.Args, " "))
-	cmd := exec.Command(hook.Command, hook.Args...)
+	return execute(hook.Command, hook.Args, hook.Executor, nil)
+}
+
+func execute(command string, args []string, executor Executor, env []string) error {
+
+	if executor == "" {
+		executor = ExecutorShell
+	}
+
+	if executor == ExecutorShell {
+		shellCmd := ""
+		var shellArgs []string
+		if runtime.GOOS == "windows" {
+			shellCmd = "cmd"
+			shellArgs = []string{"/C", command}
+			shellArgs = append(shellArgs, args...)
+		} else {
+			shellCmd = "/bin/sh"
+			shellArgs = []string{"-c", command}
+			shellArgs = append(shellArgs, args...)
+		}
+		cmd := exec.Command(shellCmd, shellArgs...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		return cmd.Run()
+	}
+
+	cmd := exec.Command(command, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
