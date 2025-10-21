@@ -12,7 +12,7 @@ func TestShouldExecuteHook_NoConditions(t *testing.T) {
 		When:    "before",
 	}
 
-	if !proxy.ShouldExecuteHook(hook, []string{"up"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"up"}, false, "win") {
 		t.Error("Hook without conditions should always execute")
 	}
 }
@@ -29,12 +29,12 @@ func TestShouldExecuteHook_OnErrorTrue(t *testing.T) {
 	}
 
 	// Should execute when there was an error
-	if !proxy.ShouldExecuteHook(hook, []string{"up"}, true) {
+	if !proxy.ShouldExecuteHook(hook, []string{"up"}, true, "win") {
 		t.Error("Hook with on_error:true should execute when there was an error")
 	}
 
 	// Should NOT execute when there was no error
-	if proxy.ShouldExecuteHook(hook, []string{"up"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"up"}, false, "win") {
 		t.Error("Hook with on_error:true should NOT execute when there was no error")
 	}
 }
@@ -51,12 +51,12 @@ func TestShouldExecuteHook_OnErrorFalse(t *testing.T) {
 	}
 
 	// Should execute when there was no error
-	if !proxy.ShouldExecuteHook(hook, []string{"up"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"up"}, false, "win") {
 		t.Error("Hook with on_error:false should execute when there was no error")
 	}
 
 	// Should NOT execute when there was an error
-	if proxy.ShouldExecuteHook(hook, []string{"up"}, true) {
+	if proxy.ShouldExecuteHook(hook, []string{"up"}, true, "win") {
 		t.Error("Hook with on_error:false should NOT execute when there was an error")
 	}
 }
@@ -72,12 +72,12 @@ func TestShouldExecuteHook_ArgsContain(t *testing.T) {
 	}
 
 	// Should execute when args contain -d
-	if !proxy.ShouldExecuteHook(hook, []string{"up", "-d"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"up", "-d"}, false, "win") {
 		t.Error("Hook should execute when args contain required string")
 	}
 
 	// Should NOT execute when args don't contain -d
-	if proxy.ShouldExecuteHook(hook, []string{"up"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"up"}, false, "win") {
 		t.Error("Hook should NOT execute when args don't contain required string")
 	}
 }
@@ -93,12 +93,12 @@ func TestShouldExecuteHook_ArgsContainMultiple(t *testing.T) {
 	}
 
 	// Should execute when args contain both strings
-	if !proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, false, "win") {
 		t.Error("Hook should execute when args contain all required strings")
 	}
 
 	// Should NOT execute when args contain only one string
-	if proxy.ShouldExecuteHook(hook, []string{"down"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"down"}, false, "win") {
 		t.Error("Hook should NOT execute when args don't contain all required strings")
 	}
 }
@@ -114,12 +114,12 @@ func TestShouldExecuteHook_ArgsMatch(t *testing.T) {
 	}
 
 	// Should execute when args match exactly
-	if !proxy.ShouldExecuteHook(hook, []string{"logs", "-f"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"logs", "-f"}, false, "win") {
 		t.Error("Hook should execute when args match exactly")
 	}
 
 	// Should NOT execute when args don't match
-	if proxy.ShouldExecuteHook(hook, []string{"logs", "--follow"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"logs", "--follow"}, false, "win") {
 		t.Error("Hook should NOT execute when args don't match exactly")
 	}
 }
@@ -137,17 +137,17 @@ func TestShouldExecuteHook_CombinedConditions(t *testing.T) {
 	}
 
 	// Should execute when all conditions are met
-	if !proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, false, "win") {
 		t.Error("Hook should execute when all conditions are met")
 	}
 
 	// Should NOT execute when error occurred (even with correct args)
-	if proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, true) {
+	if proxy.ShouldExecuteHook(hook, []string{"down", "--volumes"}, true, "win") {
 		t.Error("Hook should NOT execute when error occurred")
 	}
 
 	// Should NOT execute when args don't match (even without error)
-	if proxy.ShouldExecuteHook(hook, []string{"down"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"down"}, false, "win") {
 		t.Error("Hook should NOT execute when args don't match")
 	}
 }
@@ -163,12 +163,12 @@ func TestShouldExecuteHook_ArgsContainSubstring(t *testing.T) {
 	}
 
 	// Should execute when substring is found
-	if !proxy.ShouldExecuteHook(hook, []string{"up", "-p", "8080:80"}, false) {
+	if !proxy.ShouldExecuteHook(hook, []string{"up", "-p", "8080:80"}, false, "win") {
 		t.Error("Hook should execute when substring is found in args")
 	}
 
 	// Should NOT execute when substring is not found
-	if proxy.ShouldExecuteHook(hook, []string{"up", "-p", "9090:90"}, false) {
+	if proxy.ShouldExecuteHook(hook, []string{"up", "-p", "9090:90"}, false, "win") {
 		t.Error("Hook should NOT execute when substring is not found")
 	}
 }
