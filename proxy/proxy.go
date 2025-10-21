@@ -54,6 +54,11 @@ func Run(config *Config, args []string) error {
 
 	// Config EnvVars
 	configEnv := config.EnvVars
+
+	if configEnv == nil {
+		configEnv = make(map[string]string)
+	}
+
 	for _, kV := range os.Environ() {
 		key := strings.Split(kV, "=")[0]
 		value := strings.Split(kV, "=")[1]
