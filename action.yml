@@ -1,6 +1,6 @@
 name: 'ProxyBuild Action'
 description: 'Build command proxy executables with embedded configuration'
-author: 'Your Name'
+author: 'KilianSen'
 
 branding:
   icon: 'box'
@@ -50,41 +50,37 @@ runs:
     - name: Checkout ProxyBuild
       uses: actions/checkout@v4
       with:
-        repository: YOUR_USERNAME/ProxyBuild
+        repository: KilianSen/ProxyBuild
         path: .proxybuild-temp
+      id: build
+      run: |
         # Build command with optional cross-compilation flags
         BUILD_CMD="./ProxyBuild -build ${{ github.workspace }}/${{ inputs.config-file }}"
         
         if [ -n "${{ inputs.target-os }}" ]; then
-          BUILD_CMD="$BUILD_CMD -os ${{ inputs.target-os }}"
+        BUILD_CMD="$BUILD_CMD -os ${{ inputs.target-os }}"
         fi
-      id: build
+        
         if [ -n "${{ inputs.target-arch }}" ]; then
-          BUILD_CMD="$BUILD_CMD -arch ${{ inputs.target-arch }}"
+        BUILD_CMD="$BUILD_CMD -arch ${{ inputs.target-arch }}"
         fi
-
-      run: |
-          BUILD_CMD="$BUILD_CMD -output ${{ inputs.output-name }}"
+        
+        BUILD_CMD="$BUILD_CMD -output ${{ inputs.output-name }}"
         cd .proxybuild-temp
+        
+        # Build ProxyBuild tool
         go build -o ProxyBuild main.go
-        
-        # Build the proxy executable
-        ./ProxyBuild -build "${{ github.workspace }}/${{ inputs.config-file }}"
-          # Add .exe for Windows builds
-          if [ "${{ inputs.target-os }}" = "windows" ]; then
-            OUTPUT_NAME="${OUTPUT_NAME}.exe"
-          fi
-        
         
         echo "Building with: $BUILD_CMD"
         eval $BUILD_CMD
+        
         # Determine output name
         if [ -n "${{ inputs.output-name }}" ]; then
-          OUTPUT_NAME="${{ inputs.output-name }}"
+        OUTPUT_NAME="${{ inputs.output-name }}"
         else
-          # Extract base_command from config to determine default name
-          BASE_CMD=$(jq -r '.base_command' "${{ github.workspace }}/${{ inputs.config-file }}")
-          OUTPUT_NAME="${BASE_CMD}-proxy"
+        # Extract base_command from config to determine default name
+        BASE_CMD=$(jq -r '.base_command' "${{ github.workspace }}/${{ inputs.config-file }}")
+        OUTPUT_NAME="${BASE_CMD}-proxy"
         fi
         
         # Move executable to workspace root
@@ -101,6 +97,7 @@ runs:
         chmod +x "${{ steps.build.outputs.executable-path }}"
 
     - name: Upload artifact
+      uses: actions/upload-artifact@v4
       if: inputs.upload-artifact == 'true'
       with:
         name: ${{ steps.build.outputs.executable-name }}
