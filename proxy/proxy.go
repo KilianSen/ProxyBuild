@@ -187,6 +187,9 @@ func execute(command string, args []string, executor Executor, env []string) err
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
+		if env != nil {
+			cmd.Env = env
+		}
 		return cmd.Run()
 	}
 
@@ -194,5 +197,8 @@ func execute(command string, args []string, executor Executor, env []string) err
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+	if env != nil {
+		cmd.Env = env
+	}
 	return cmd.Run()
 }
