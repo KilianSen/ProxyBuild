@@ -77,6 +77,7 @@ func Run(config *Config, args []string) error {
 	var overloaded []string
 	for key, value := range configEnv {
 		overloaded = append(overloaded, fmt.Sprintf("%s=%s", key, value))
+		println("Set env:", key, "=", value)
 	}
 
 	// New executor
@@ -191,14 +192,16 @@ func execute(command string, args []string, executor Executor, env []string) err
 			cmd.Env = env
 		}
 		return cmd.Run()
+	} else if executor == ExecutorDirect {
+		cmd := exec.Command(command, args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		if env != nil {
+			cmd.Env = env
+		}
+		return cmd.Run()
 	}
 
-	cmd := exec.Command(command, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	if env != nil {
-		cmd.Env = env
-	}
-	return cmd.Run()
+	return fmt.Errorf("unbekannter Executor-Typ: %s", executor)
 }

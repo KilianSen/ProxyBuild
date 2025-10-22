@@ -135,6 +135,8 @@ func buildExecutable(opts BuildOptions) error {
 		return err
 	}
 
+	println(string(configData))
+
 	// Resolve applicable build env vars to config, before embedding config in build step
 	envVars := os.Environ()
 	if len(envVars) >= 1 {
@@ -152,6 +154,8 @@ func buildExecutable(opts BuildOptions) error {
 			configData = bytes.Replace(configData, []byte(windowsSyntax), []byte(val), -1)
 		}
 	}
+
+	println(string(configData))
 
 	if err := os.WriteFile(filepath.Join(buildDir, "config.json"), configData, 0644); err != nil {
 		return err
