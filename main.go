@@ -142,13 +142,17 @@ func buildExecutable(opts BuildOptions) error {
 		for _, envVar := range envVars {
 			key := strings.Split(envVar, "=")[0]
 			val := strings.Split(envVar, "=")[1]
-			println("Ersetze in config:", key)
+			print("Ersetze in config:", key)
+			print(" = ")
 
 			// Windows Env Syntax: %key%
 			windowsSyntax := fmt.Sprintf("%%%s%%", key)
+			print(windowsSyntax)
+			print(" -> ")
 
 			// Unix Env Syntax: ${key}
 			unixSyntax := fmt.Sprintf("${%s}", key)
+			println(unixSyntax)
 
 			configData = bytes.Replace(configData, []byte(unixSyntax), []byte(val), -1)
 			configData = bytes.Replace(configData, []byte(windowsSyntax), []byte(val), -1)
