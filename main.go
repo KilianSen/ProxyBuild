@@ -136,13 +136,13 @@ func buildExecutable(opts BuildOptions) error {
 	}
 
 	println(string(configData))
-
 	// Resolve applicable build env vars to config, before embedding config in build step
 	envVars := os.Environ()
 	if len(envVars) >= 1 {
 		for _, envVar := range envVars {
 			key := strings.Split(envVar, "=")[0]
 			val := strings.Split(envVar, "=")[1]
+			println("Ersetze in config:", key)
 
 			// Windows Env Syntax: %key%
 			windowsSyntax := fmt.Sprintf("%%%s%%", key)
