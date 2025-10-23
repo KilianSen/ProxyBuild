@@ -143,6 +143,12 @@ func buildExecutable(opts BuildOptions) error {
 			key := strings.Split(envVar, "=")[0]
 			val := strings.Split(envVar, "=")[1]
 			print("Ersetze in config:", key)
+			// print 3 first chars of val
+			if len(val) > 3 {
+				print(" (Wert beginnt mit: " + val[:3] + "...)")
+			} else {
+				print(" (Wert: " + val + ")")
+			}
 			print(" = ")
 
 			// Windows Env Syntax: %key%
@@ -151,7 +157,7 @@ func buildExecutable(opts BuildOptions) error {
 			print(" -> ")
 
 			// Unix Env Syntax: ${key}
-			unixSyntax := fmt.Sprintf("${%s}", key)
+			unixSyntax := fmt.Sprintf("$%s", key)
 			println(unixSyntax)
 
 			configData = bytes.Replace(configData, []byte(unixSyntax), []byte(val), -1)
