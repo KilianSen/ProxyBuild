@@ -55,7 +55,7 @@ func Run(config *Config, args []string) error {
 		for _, hook := range hooks {
 			if hook.When == "before" && ShouldExecuteHook(hook, args, false, osString) {
 				if err := executeHook(hook); err != nil {
-					return fmt.Errorf("Fehler beim Ausführen des before-Hooks: %w", err)
+					return fmt.Errorf("fehler beim Ausführen des before-Hooks: %w", err)
 				}
 			}
 		}
@@ -79,17 +79,7 @@ func Run(config *Config, args []string) error {
 		overloaded = append(overloaded, fmt.Sprintf("%s=%s", key, value))
 	}
 
-	// New executor
-	println("Führe Basis-Command aus:", config.BaseCommand, strings.Join(args, " "))
 	err := execute(config.BaseCommand, args, config.Executor, overloaded)
-
-	if err != nil {
-		// Fehler des Basis-Commands, aber trotzdem "after" Hooks ausführen
-		_, err := fmt.Fprintf(os.Stderr, "Basis-Command fehlgeschlagen: %v\n", err)
-		if err != nil {
-			return err
-		}
-	}
 
 	// Führe "after" Hooks aus
 	if hooks, exists := config.Hooks[subCommand]; exists {
