@@ -135,37 +135,22 @@ func buildExecutable(opts BuildOptions) error {
 		return err
 	}
 
-	println(string(configData))
 	// Resolve applicable build env vars to config, before embedding config in build step
 	envVars := os.Environ()
 	if len(envVars) >= 1 {
 		for _, envVar := range envVars {
 			key := strings.Split(envVar, "=")[0]
 			val := strings.Split(envVar, "=")[1]
-			print("Ersetze in config:", key)
-			// print 3 first chars of val
-			if len(val) > 3 {
-				print(" (Wert beginnt mit: " + val[:3] + "...)")
-			} else {
-				print(" (Wert: " + val + ")")
-			}
-			print(" = ")
-
 			// Windows Env Syntax: %key%
 			windowsSyntax := fmt.Sprintf("%%%s%%", key)
-			print(windowsSyntax)
-			print(" -> ")
 
-			// Unix Env Syntax: ${key}
+			// Unix Env Syntax: $key
 			unixSyntax := fmt.Sprintf("$%s", key)
-			println(unixSyntax)
 
 			configData = bytes.Replace(configData, []byte(unixSyntax), []byte(val), -1)
 			configData = bytes.Replace(configData, []byte(windowsSyntax), []byte(val), -1)
 		}
 	}
-
-	println(string(configData))
 
 	if err := os.WriteFile(filepath.Join(buildDir, "config.json"), configData, 0644); err != nil {
 		return err
