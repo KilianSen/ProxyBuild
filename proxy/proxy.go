@@ -181,8 +181,7 @@ func execute(command string, args []string, executor Executor, env []string) err
 			shellArgs = append(shellArgs, args...)
 		} else {
 			shellCmd = "/bin/sh"
-			shellArgs = []string{"-c", command}
-			shellArgs = append(shellArgs, args...)
+			shellArgs = []string{"-c", command + " " + strings.Join(args, " ")}
 		}
 		cmd := exec.Command(shellCmd, shellArgs...)
 		cmd.Stdout = os.Stdout
