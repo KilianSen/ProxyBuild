@@ -77,10 +77,10 @@ func Run(config *Config, args []string) error {
 	var overloaded []string
 	for key, value := range configEnv {
 		overloaded = append(overloaded, fmt.Sprintf("%s=%s", key, value))
-		println("Set env:", key, "=", value)
 	}
 
 	// New executor
+	println("Führe Basis-Command aus:", config.BaseCommand, strings.Join(args, " "))
 	err := execute(config.BaseCommand, args, config.Executor, overloaded)
 
 	if err != nil {
